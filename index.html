@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Calculator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e0e7ff, #f5f3ff);
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 360px;
+      padding: 25px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 15px 40px rgba(40, 50, 100, 0.15);
+    }
+
+    .heading {
+      margin-bottom: 20px;
+      color: #1e293b;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .display {
+      width: 100%;
+      min-height: 105px;
+      margin-bottom: 20px;
+      padding: 20px 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      gap: 10px;
+      overflow: hidden;
+      background: #f1f5f9;
+      border-radius: 16px;
+    }
+
+    #expression {
+      max-width: 100%;
+      color: #64748b;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+
+    #result {
+      max-width: 100%;
+      color: #0f172a;
+      font-size: 32px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      min-width: 0;
+      height: 58px;
+      border: none;
+      border-radius: 14px;
+      background: #f1f5f9;
+      color: #1e293b;
+      font-size: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #e2e8f0;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .utility {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .utility:hover {
+      background: #fecaca;
+    }
+
+    .operator {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .operator:hover {
+      background: #c7d2fe;
+    }
+
+    .equals {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .equals:hover {
+      background: #4338ca;
+    }
+
+    .zero {
+      grid-column: span 2;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: #94a3b8;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="calculator">
+    <h1 class="heading">Calculator</h1>
+
+    <div class="display" aria-live="polite">
+      <div id="expression">Ready to calculate</div>
+      <div id="result">0</div>
+    </div>
+
+    <div class="buttons">
+      <button class="utility" onclick="clearEntry()"
+              aria-label="Clear current entry">C</button>
+      <button class="utility" onclick="resetCalculator()"
+              aria-label="Reset calculator">AC</button>
+      <button class="operator" onclick="chooseOperator('%')">%</button>
+      <button class="operator" onclick="chooseOperator('/')">÷</button>
+
+      <button onclick="inputNumber('7')">7</button>
+      <button onclick="inputNumber('8')">8</button>
+      <button onclick="inputNumber('9')">9</button>
+      <button class="operator" onclick="chooseOperator('*')">×</button>
+
+      <button onclick="inputNumber('4')">4</button>
+      <button onclick="inputNumber('5')">5</button>
+      <button onclick="inputNumber('6')">6</button>
+      <button class="operator" onclick="chooseOperator('-')">−</button>
+
+      <button onclick="inputNumber('1')">1</button>
+      <button onclick="inputNumber('2')">2</button>
+      <button onclick="inputNumber('3')">3</button>
+      <button class="operator" onclick="chooseOperator('+')">+</button>
+
+      <button onclick="inputNumber('0')" class="zero">0</button>
+      <button onclick="inputDecimal()">.</button>
+      <button class="equals" onclick="calculate()">=</button>
+    </div>
+
+    <p class="footer">Simple • Fast • Easy to use</p>
+  </main>
+
+  <script>
+    let current = '0';
+    let previous = null;
+    let operator = null;
+    let waitingForOperand = false;
+    let expressionText = '';
+
+    const resultDisplay = document.getElementById('result');
+    const expressionDisplay = document.getElementById('expression');
+
+    function updateDisplay() {
+      resultDisplay.textContent = current;
+      expressionDisplay.textContent =
+        expressionText || 'Ready to calculate';
+    }
+
+    function inputNumber(number) {
+      if (current === 'Error' || waitingForOperand) {
+        current = number;
+        waitingForOperand = false;
+      } else if (current === '0') {
+        current = number;
+      } else if (current.replace('-', '').length < 15) {
+        current += number;
+      }
+
+      updateDisplay();
+    }
+
+    function inputDecimal() {
+      if (current === 'Error' || waitingForOperand) {
+        current = '0.';
+        waitingForOperand = false;
+      } else if (!current.includes('.')) {
+        current += '.';
+      }
+
+      updateDisplay();
+    }
+
+    function clearEntry() {
+      current = '0';
+      waitingForOperand = false;
+      updateDisplay();
+    }
+
+    function resetCalculator() {
+      current = '0';
+      previous = null;
+      operator = null;
+      waitingForOperand = false;
+      expressionText = '';
+      updateDisplay();
+    }
+
+    function formatNumber(number) {
+      if (!Number.isFinite(number)) {
+        return 'Error';
+      }
+
+      const rounded = Number(number.toPrecision(12));
+      return String(rounded);
+    }
+
+    function chooseOperator(nextOperator) {
+      if (current === 'Error') {
+        resetCalculator();
+        return;
+      }
+
+      if (operator && !waitingForOperand) {
+        calculate();
+      }
+
+      previous = Number(current);
+      operator = nextOperator;
+      expressionText = `${current} ${symbol(nextOperator)}`;
+      waitingForOperand = true;
+      updateDisplay();
+    }
+
+    function symbol(op) {
+      return { '+': '+', '-': '−', '*': '×',
+               '/': '÷', '%': '%' }[op];
+    }
+
+    function calculate() {
+      if (operator === null || previous === null ||
+          waitingForOperand) {
+        return;
+      }
+
+      const first = previous;
+      const second = Number(current);
+      const op = operator;
+      let answer;
+
+      switch (op) {
+        case '+':
+          answer = first + second;
+          break;
+        case '-':
+          answer = first - second;
+          break;
+        case '*':
+          answer = first * second;
+          break;
+        case '/':
+          if (second === 0) {
+            current = 'Error';
+            expressionText = 'Cannot divide by zero';
+            previous = null;
+            operator = null;
+            waitingForOperand = true;
+            updateDisplay();
+            return;
+          }
+          answer = first / second;
+          break;
+        case '%':
+          answer = first % second;
+          break;
+        default:
+          return;
+      }
+
+      expressionText =
+        `${first} ${symbol(op)} ${second} =`;
+
+      current = formatNumber(answer);
+      previous = null;
+      operator = null;
+      waitingForOperand = true;
+      updateDisplay();
+    }
+
+    document.addEventListener('keydown', function(event) {
+      const key = event.key;
+
+      if (key >= '0' && key <= '9') {
+        inputNumber(key);
+      } else if (key === '.') {
+        inputDecimal();
+      } else if (['+', '-', '*', '/', '%'].includes(key)) {
+        chooseOperator(key);
+      } else if (key === 'Enter' || key === '=') {
+        event.preventDefault();
+        calculate();
+      } else if (key === 'Escape') {
+        resetCalculator();
+      } else if (key === 'Backspace') {
+        clearEntry();
+      }
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
